@@ -1,7 +1,6 @@
 import express, {
   NextFunction,
   Request,
-  RequestHandler,
   Response,
 } from "express";
 import { connectDB } from "./utils/features.js";
@@ -28,35 +27,33 @@ const mongo_uri = process.env.MONGO_URI || "";
 const key_id = process.env.RAZORPAY_KEY_ID || "";
 const key_secret = process.env.RAZORPAY_KEY_SECRET || "";
 
-// TODO: We have to delete this in future
-// const stripeKey = process.env.STRIPE_KEY || "";
+// Optional: Store your frontend URL in the .env file
+const allowedOrigins: string[] = [
+  process.env.FRONTEND_URL || "http://localhost:5173",
+  "https://chalo-shop-a2q3bu3fb-jayesh-shrivastavas-projects.vercel.app",
+];
 
 connectDB(mongo_uri);
 
-// export const stripe = new Stripe(stripeKey);
 export const razorpay = new Razorpay({ key_id, key_secret });
 
 const app = express();
 
-// this should be prior to any routes
+// Middleware setup
 app.use(express.json());
 app.use(morgan("dev"));
 
-// const allowedOrigins = [process.env.FRONTEND_URL || ""];
-// app.use(
-//   cors({
-//     origin: allowedOrigins,
-//     methods: ["GET", "PUT", "DELETE", "POST", "PATCH"],
-//     credentials: true,
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-
 app.use(
   cors({
-    origin: "http://localhost:5173", // Remove the trailing slash
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true, // Enable credentials (cookies, authorization headers, etc.)
+    credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -65,18 +62,19 @@ app.get("/", (req, res) => {
   res.send("API working successfully");
 });
 
-// a error middleware is needed at the end of every routes
-
+// Routes
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/payment", couponRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 
+// Serve static files
 app.use("/uploads", express.static("uploads"));
+
+// Error handling middleware
 app.use(errorMiddleWare);
 
-// creating error handling middlewares for it to apply in the end if there is some error
 app.listen(port, () => {
-  console.log(`Express is working on http://localhost:${port}`);
+  console.log(`Express is running on http://localhost:${port}`);
 });
