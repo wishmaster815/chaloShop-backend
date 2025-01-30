@@ -1,8 +1,4 @@
-import express, {
-  NextFunction,
-  Request,
-  Response,
-} from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { connectDB } from "./utils/features.js";
 import { errorMiddleWare } from "./middlewares/errorHandler.js";
 import NodeCache from "node-cache";
@@ -45,21 +41,24 @@ app.use(morgan("dev"));
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    origin: allowedOrigins,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.get("/", (req, res) => {
   res.send("API working successfully");
+});
+
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://chalo-shop-pb30svzau-jayesh-shrivastavas-projects.vercel.app"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
 });
 
 // Routes
