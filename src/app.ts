@@ -11,7 +11,6 @@ import productRoutes from "./routes/product.js";
 import orderRoutes from "./routes/order.js";
 import couponRoutes from "./routes/payment.js";
 import dashboardRoutes from "./routes/adminStats.js";
-import Stripe from "stripe";
 import Razorpay from "razorpay";
 
 config({ path: "./.env" });
@@ -26,7 +25,7 @@ const key_secret = process.env.RAZORPAY_KEY_SECRET || "";
 // Optional: Store your frontend URL in the .env file
 const allowedOrigins: string[] = [
   process.env.FRONTEND_URL || "http://localhost:5173",
-  "https://chalo-shop-a2q3bu3fb-jayesh-shrivastavas-projects.vercel.app",
+  "https://chalo-shop-pb30svzau-jayesh-shrivastavas-projects.vercel.app",
 ];
 
 connectDB(mongo_uri);
@@ -50,14 +49,21 @@ app.get("/", (req, res) => {
   res.send("API working successfully");
 });
 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://chalo-shop-pb30svzau-jayesh-shrivastavas-projects.vercel.app"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   next();
 });
 
